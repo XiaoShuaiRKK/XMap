@@ -9,110 +9,118 @@ import SwiftUI
 import MapKit
 
 struct ContentView: View {
-    let park = CLLocationCoordinate2D(latitude: 22.497284, longitude: 113.388242)
-        let treePark = CLLocationCoordinate2D(latitude: 22.503584, longitude: 113.391698)
-        
-        
-        @State var region = MKCoordinateRegion(center: CLLocationCoordinate2D(latitude: 22.497242, longitude: 113.388339), span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05))
-        @State var camera: MapCameraPosition = .automatic
-        @State var cameraPosition: MapCameraPosition = .region(.userRegion)
-        @State var searchText = ""
-        @State var results = [MKMapItem]()
-        
-        var body: some View {
-            
-            Map(position: $cameraPosition){
-                Marker("孙文公园",systemImage: "", coordinate: park)
-                    .tint(.green)
-                Marker("湿地公园",systemImage: "",coordinate: treePark)
-                UserAnnotation()
-                Annotation("My Location", coordinate: .userLocation) {
-                    ZStack{
-                        Circle()
-                            .frame(width: 32,height: 32)
-                            .foregroundStyle(.blue.opacity(0.25))
-                        Circle()
-                            .frame(width: 20,height: 20)
-                            .foregroundColor(.white)
-                        Circle()
-                            .frame(width: 12,height: 12)
-                            .foregroundColor(.blue)
+    @State private var position: MapCameraPosition = .userLocation(fallback: .automatic)
+    //选择到的地点
+    @State private var selectedLocation: CLLocationCoordinate2D = CLLocationCoordinate2D()
+    //是否显示创建地点视图
+    @State private var showLocationInfo = false
+    //是否显示地点详细页
+    @State private var showDetailLocationInfo = false
+    //选中的SavedLocation
+    @State private var selectedDetailLocation: SavedLocation = SavedLocation(coordinate: CLLocationCoordinate2D(), name: "", icon: "", color: .red)
+    @State private var isShowDetail = false
+    @EnvironmentObject var locationStore: LocationManager
+    
+    var body: some View {
+        ZStack{
+            MapReader{ proxy in
+                Map(position: $position, interactionModes: .all){
+                    UserAnnotation()
+                    ForEach(locationStore.savedLocations, id: \.self) { location in
+                        Annotation(coordinate: location.coordinate) {
+                            Button{
+                                if isShowDetail {
+                                    selectedDetailLocation = location
+                                    showDetailLocationInfo = true
+                                }
+                            } label: {
+                                ZStack{
+                                    Circle()
+                                        .fill(.white)
+                                        .frame(width: 30, height: 30)
+                                    Circle()
+                                        .fill(location.color)
+                                        .frame(width: 25, height: 25)
+                                    Image(systemName: location.icon)
+                                        .resizable()
+                                        .foregroundColor(.white)
+                                        .font(.title)
+                                        .frame(width: 15, height: 15)
+                                }
+                                .frame(width: 30, height: 30)
+                            }
+                            
+                        } label: {
+                            Text(location.name)
+                                .font(.caption)
+                                .foregroundColor(.black)
+                        }
                     }
                 }
-                ForEach(results, id: \.self){ item in
-                    let placemark = item.placemark
-                    Marker(placemark.name ?? "", coordinate: placemark.coordinate)
+                .onTapGesture { location in
+                    if !isShowDetail{
+                        let coordinate = proxy.convert(location, from: .local)
+                        selectedLocation = coordinate!
+                        showLocationInfo = true
+                    }
+                }
+                .mapControls{
+                    MapUserLocationButton()
+                    MapPitchToggle()
+                }
+                .mapFeatureSelectionAccessory(.callout)
+                .onAppear {
+                    CLLocationManager().requestWhenInUseAuthorization()
                 }
             }
-            .overlay(alignment: .top){
-                TextField("Search for a location...", text: $searchText)
-                    .foregroundColor(.black)
-                    .font(.subheadline)
-                    .padding(12)
-                    .background(.white)
-                    .cornerRadius(12)
-                    .padding(.horizontal, 55)
-                    .padding(.vertical, 10)
-                    .shadow(radius: 12)
-            }
-            .onSubmit(of: /*@START_MENU_TOKEN@*/.text/*@END_MENU_TOKEN@*/) {
-                Task{
-                    await searchPlaces()
-                }
-            }
-            .mapControls{
-                MapCompass()
-                MapPitchToggle()
-                MapUserLocationButton()
-            }
-            .safeAreaInset(edge: .bottom) {
+            VStack{
                 HStack{
                     Spacer()
                     Button{
-                        camera = .region(MKCoordinateRegion(
-                            center: park,
-                            latitudinalMeters: 300,
-                            longitudinalMeters: 300))
+                        isShowDetail.toggle()
                     }label: {
-                        Text("PARK")
+                        Text(isShowDetail ? "查看" : "创建")
+                            .padding()
+                            .background(.blue)
+                            .foregroundColor(.white)
+                            .cornerRadius(10)
                     }
-                    Button{
-                        camera = .region(MKCoordinateRegion(
-                            center: treePark,
-                            latitudinalMeters: 300,
-                            longitudinalMeters: 300))
-                    }label: {
-                        Text("Tree Park")
-                    }
-                    Spacer()
+                    .padding()
                 }
-                .padding(.top)
-                .background(.thinMaterial)
+                .padding(.top, 100)
+                Spacer()
             }
-    //        .mapStyle(.imagery)
+        }
+        .sheet(isPresented: $showLocationInfo) {
+            if selectedLocation.latitude != 0.0 {
+                AddPointView(selectedLocation: $selectedLocation, showLocationInfo: $showLocationInfo)
+            }
+        }
+        .sheet(isPresented: $showDetailLocationInfo) {
+            DetailLocationView()
         }
 }
 
-extension ContentView{
-    func searchPlaces() async {
-        let request = MKLocalSearch.Request()
-        request.naturalLanguageQuery = searchText
-        request.region = .userRegion
-        let results = try? await MKLocalSearch(request: request).start()
-        self.results = results?.mapItems ?? []
-    }
-}
-
-extension CLLocationCoordinate2D{
-    static var userLocation: CLLocationCoordinate2D{
-        return .init(latitude: 22.499157, longitude: 113.388548)
-    }
-}
-
-extension MKCoordinateRegion {
-    static var userRegion: MKCoordinateRegion{
-        return .init(center: .userLocation, latitudinalMeters: 10000, longitudinalMeters: 10000)
-    }
+//extension ContentView{
+//    func searchPlaces() async {
+//        let request = MKLocalSearch.Request()
+//        request.naturalLanguageQuery = searchText
+//        request.region = .userRegion
+//        let results = try? await MKLocalSearch(request: request).start()
+//        self.results = results?.mapItems ?? []
+//    }
+//}
+//
+//extension CLLocationCoordinate2D{
+//    static var userLocation: CLLocationCoordinate2D{
+//        return .init(latitude: 22.499157, longitude: 113.388548)
+//    }
+//}
+//
+//extension MKCoordinateRegion {
+//    static var userRegion: MKCoordinateRegion{
+//        return .init(center: .userLocation, latitudinalMeters: 10000, longitudinalMeters: 10000)
+//    }
 }
 
 #Preview {

@@ -9,9 +9,12 @@ import SwiftUI
 
 @main
 struct XMapApp: App {
+    @StateObject private var locationStore = LocationManager()
+    
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environmentObject(locationStore)
         }
     }
 }
