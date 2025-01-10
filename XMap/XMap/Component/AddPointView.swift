@@ -15,7 +15,7 @@ struct AddPointView: View {
     @State private var customText = "地点"
     @State private var selectedIcon: String = "mappin.and.ellipse"
     @State private var selectedColorIndex: Int = 0
-    let icons = ["mappin.and.ellipse","star","heart","flag","leaf"]
+    
     @EnvironmentObject var locationStore: LocationManager
     
     var body: some View {

@@ -16,9 +16,12 @@ struct OriginalMapView: View {
     @State private var showLocationInfo = false
     //是否显示地点详细页
     @State private var showDetailLocationInfo = false
+    @State private var showFilter = false
     //选中的SavedLocation
     @State private var selectedDetailLocation: SavedLocation = SavedLocation(coordinate: CLLocationCoordinate2D(), name: "", icon: "", color: .red)
     @State private var isShowDetail = false
+    @State private var selectedIcon: String = ""
+    @State private var selectedColor: Color = .clear
     @EnvironmentObject var locationStore: LocationManager
     var body: some View {
         ZStack{
@@ -58,10 +61,17 @@ struct OriginalMapView: View {
                     }
                 }
                 .onTapGesture { location in
-                    if !isShowDetail{
-                        let coordinate = proxy.convert(location, from: .local)
-                        selectedLocation = coordinate!
-                        showLocationInfo = true
+                    if showFilter {
+                        withAnimation {
+                            showFilter = false
+                        }
+                    }
+                    else {
+                        if !isShowDetail{
+                            let coordinate = proxy.convert(location, from: .local)
+                            selectedLocation = coordinate!
+                            showLocationInfo = true
+                        }
                     }
                 }
                 .mapControls{
@@ -77,21 +87,44 @@ struct OriginalMapView: View {
             VStack{
                 HStack{
                     Spacer()
-                    Button{
-                        isShowDetail.toggle()
-                    }label: {
-                        Image(systemName: isShowDetail ? "eye.fill" : "plus.circle.fill")
-                            .resizable()
-                            .frame(width: 20,height: 20)
-                            .foregroundColor(.white)
-                            .padding(15)
-                            .background(.blue)
-                            .cornerRadius(10)
+                    VStack {
+                        Button{
+                            isShowDetail.toggle()
+                        }label: {
+                            Image(systemName: isShowDetail ? "eye.fill" : "plus.circle.fill")
+                                .resizable()
+                                .frame(width: 20,height: 20)
+                                .foregroundColor(.white)
+                                .padding(15)
+                                .background(.blue)
+                                .cornerRadius(10)
+                        }
+                        
+                        Button{
+                            withAnimation {
+                                showFilter.toggle()
+                            }
+                        } label: {
+                            Image(systemName: "slider.horizontal.3")
+                                .resizable()
+                                .frame(width: 20,height: 20)
+                                .foregroundColor(.white)
+                                .padding(15)
+                                .background(.blue)
+                                .cornerRadius(10)
+                        }
                     }
                     .padding()
                 }
                 .padding(.top, 100)
                 Spacer()
+            }
+            
+            
+            if showFilter {
+                FilterView(selectedIcon: $selectedIcon, selectedColor: $selectedColor)
+                    .transition(.move(edge: .trailing))
+                    .animation(.default)
             }
         }
         .sheet(isPresented: $showLocationInfo) {

@@ -10,6 +10,10 @@ import MapKit
 import SwiftUI
 
 let colors: [Color] = [.red, .green, .blue, .orange, .purple]
+let icons = ["mappin.and.ellipse","star","heart","flag","leaf"]
+
+let iconsFilter = ["全部","mappin.and.ellipse","star","heart","flag","leaf"]
+let colorsFilter: [Color] = [.clear,.red, .green, .blue, .orange, .purple]
 
 class LocationManager: NSObject, ObservableObject{
     @Published var savedLocations: [SavedLocation] = []
