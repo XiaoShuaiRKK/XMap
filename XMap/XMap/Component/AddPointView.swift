@@ -103,7 +103,24 @@ struct AddPointView: View {
             Map(coordinateRegion: .constant(MKCoordinateRegion(
                 center: selectedLocation,
                 span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
-            )))
+            )),annotationItems: [IdentifiableLocation(coordinate: selectedLocation)]) { location in
+                MapAnnotation(coordinate: location.coordinate) {
+                    ZStack{
+                        Circle()
+                            .fill(.white)
+                            .frame(width: 30, height: 30)
+                        Circle()
+                            .fill(colors[selectedColorIndex])
+                            .frame(width: 25, height: 25)
+                        Image(systemName: selectedIcon)
+                            .resizable()
+                            .foregroundColor(.white)
+                            .font(.title)
+                            .frame(width: 15, height: 15)
+                    }
+                    .frame(width: 40, height: 40)
+                }
+            }
             .cornerRadius(20)
         }
         .frame(height: 200)

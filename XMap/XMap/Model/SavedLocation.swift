@@ -9,7 +9,8 @@ import Foundation
 import MapKit
 import SwiftUI
 
-struct SavedLocation: Hashable {
+struct SavedLocation: Hashable,Identifiable {
+    let id = UUID()
     let coordinate: CLLocationCoordinate2D
     let name: String
     let icon: String

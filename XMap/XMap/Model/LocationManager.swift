@@ -11,10 +11,11 @@ import SwiftUI
 
 let colors: [Color] = [.red, .green, .blue, .orange, .purple]
 
-class LocationManager: ObservableObject{
+class LocationManager: NSObject, ObservableObject{
     @Published var savedLocations: [SavedLocation] = []
     static let shared = LocationManager()
-    init() {
+    override init() {
+        super.init()
         loadSavedLocations()
     }
     private let key = "saveLocations"
@@ -58,3 +59,4 @@ class LocationManager: ObservableObject{
         }
     }
 }
+

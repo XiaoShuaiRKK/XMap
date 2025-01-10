@@ -10,5 +10,23 @@
 			<string>Default</string>
 		</dict>
 	</array>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>com.xs.XMap</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>xmap</string>
+			</array>
+		</dict>
+	</array>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>qqmusic</string>
+		<string>xmap</string>
+	</array>
 </dict>
 </plist>
