@@ -9,64 +9,81 @@ import SwiftUI
 import MapKit
 
 struct DetailLocationView: View {
-    @State var location: SavedLocation
+    @Binding var location: SavedLocation
     @State var isDelete = false
     @State private var images: [UIImage] = []
     @State private var showImagePicker = false
+    //图片是否加载完成
+    @State private var isLoadingImages = true
     @EnvironmentObject var locationStore: LocationManager
     
     var body: some View {
-        ScrollView {
-            VStack(spacing: 10){
-                HStack{
-                    Text(location.name)
-                        .font(.title)
-                        .fontWeight(.bold)
-                    ZStack{
-                        Circle()
-                            .fill(.white)
-                            .frame(width: 30, height: 30)
-                        Circle()
-                            .fill(location.color)
-                            .frame(width: 25, height: 25)
-                        Image(systemName: location.icon)
-                            .resizable()
-                            .foregroundColor(.white)
+        if !location.id.isEmpty {
+            ScrollView {
+                VStack(spacing: 10){
+                    HStack{
+                        Text(location.name)
                             .font(.title)
-                            .frame(width: 15, height: 15)
+                            .fontWeight(.bold)
+                        ZStack{
+                            Circle()
+                                .fill(.white)
+                                .frame(width: 30, height: 30)
+                            Circle()
+                                .fill(location.color)
+                                .frame(width: 25, height: 25)
+                            Image(systemName: location.icon)
+                                .resizable()
+                                .foregroundColor(.white)
+                                .font(.title)
+                                .frame(width: 15, height: 15)
+                        }
                     }
-                }
-                .frame(maxWidth: .infinity,alignment: .leading)
-                lookMapLocationView
-                imageCarousel
-//                NowPlayingView()
-                Spacer()
-                Button{
-                    if !isDelete {
-                        isDelete = true
-                    }else {
-                        locationStore.deleteLocation(location: location)
+                    .frame(maxWidth: .infinity,alignment: .leading)
+                    lookMapLocationView
+                    if isLoadingImages {
+                        loadingIndicator
+                    } else {
+                        imageCarousel
                     }
-                } label: {
-                    Text("Delete")
+    //                NowPlayingView()
+                    Spacer()
+                    Button{
+                        if !isDelete {
+                            isDelete = true
+                        }else {
+                            locationStore.deleteLocation(location: location)
+                        }
+                    } label: {
+                        Text("Delete")
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(isDelete ? .red : .gray)
+                    .foregroundColor(.white)
+                    .cornerRadius(20)
                 }
-                .frame(maxWidth: .infinity)
                 .padding()
-                .background(isDelete ? .red : .gray)
-                .foregroundColor(.white)
-                .cornerRadius(20)
+                .frame(maxWidth: .infinity,maxHeight: .infinity)
+                .shadow(radius: 10)
+                .sheet(isPresented: $showImagePicker) {
+                    ImagePicker(images: $images, locationID: location.id)
+                }
+                .onAppear {
+                    loadImagesFromDisk()
+                }
             }
-            .padding()
-            .frame(maxWidth: .infinity,maxHeight: .infinity)
-            .shadow(radius: 10)
-            .sheet(isPresented: $showImagePicker) {
-                ImagePicker(images: $images, locationID: location.id)
-            }
-            .onAppear {
-                loadImagesFromDisk()
+            .scrollIndicators(.hidden)
+        } else {
+            VStack(spacing: 20) {
+                ProgressView()
+                    .progressViewStyle(CircularProgressViewStyle(tint: .green))
+                    .scaleEffect(2)
+                Text("Loading...")
+                    .font(.headline)
+                    .foregroundColor(.gray)
             }
         }
-        .scrollIndicators(.hidden)
     }
     
     var lookMapLocationView: some View {
@@ -108,6 +125,19 @@ struct DetailLocationView: View {
             .cornerRadius(20)
         }
         .frame(height: 200)
+    }
+    
+    var loadingIndicator: some View {
+        VStack(spacing: 20) {
+            ProgressView()
+                .progressViewStyle(CircularProgressViewStyle(tint: .blue))
+                .scaleEffect(2)
+            Text("正在加载图片...")
+                .font(.headline)
+                .foregroundColor(.gray)
+        }
+        .frame(maxWidth: .infinity)
+        .padding()
     }
     
     var imageCarousel: some View {
@@ -168,16 +198,23 @@ struct DetailLocationView: View {
     
     // 从磁盘加载图片
     func loadImagesFromDisk() {
-        let key = "\(location.id.uuidString)\(ImagePicker.IMAGE_KEY)"
+        let key = "\(location.id)\(ImagePicker.IMAGE_KEY)"
         let filenames = UserDefaults.standard.stringArray(forKey: key) ?? []
         print(key)
         print("Loaded filenames: \(filenames)")
-        for filename in filenames {
-            let url = getDocumentsDirectory().appendingPathComponent(filename)
-            if let data = try? Data(contentsOf: url), let image = UIImage(data: data) {
-                images.append(image)
-            } else {
-                print("Failed to load image: \(filename)")
+        DispatchQueue.global(qos: .background).async {
+            var loadedImages: [UIImage] = []
+            for filename in filenames {
+                let url = getDocumentsDirectory().appendingPathComponent(filename)
+                if let data = try? Data(contentsOf: url), let image = UIImage(data: data) {
+                    loadedImages.append(image)
+                } else {
+                    print("Failed to load image: \(filename)")
+                }
+            }
+            DispatchQueue.main.async {
+                self.images = loadedImages
+                self.isLoadingImages = false
             }
         }
     }
@@ -188,5 +225,6 @@ struct DetailLocationView: View {
 }
 
 #Preview {
-    DetailLocationView(location: SavedLocation(coordinate: CLLocationCoordinate2D(), name: "", icon: "", color: .red))
+    @State var location: SavedLocation = SavedLocation(id: "", coordinate: CLLocationCoordinate2D(), name: "", icon: "", color: .red)
+    DetailLocationView(location: $location)
 }

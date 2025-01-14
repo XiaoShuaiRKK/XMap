@@ -57,7 +57,6 @@ struct FilterView: View {
         .frame(maxWidth: 300)
         .background(Color(.systemBackground))
         .cornerRadius(10)
-        .shadow(radius: 5)
     }
 }
 

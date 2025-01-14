@@ -27,6 +27,7 @@ class LocationManager: NSObject, ObservableObject{
         print(colorIndex)
         var savedLocations = UserDefaults.standard.array(forKey: key) as? [[String: Any]] ?? []
         let newLocation: [String: Any] = [
+            "id": UUID().uuidString,
             "latitude": location.latitude,
             "longitude": location.longitude,
             "name": name,
@@ -41,26 +42,37 @@ class LocationManager: NSObject, ObservableObject{
     func loadSavedLocations(){
         let savedData = UserDefaults.standard.array(forKey: key) as? [[String: Any]] ?? []
         savedLocations = savedData.compactMap { dict in
-            if let latitude = dict["latitude"] as? Double, let longitude = dict["longitude"] as? Double,
-               let name = dict["name"] as? String, let icon = dict["icon"] as? String, let colorIndex = dict["color"] as? Int{
-                return SavedLocation(coordinate: CLLocationCoordinate2D(latitude: latitude, longitude: longitude), name: name, icon: icon, color: colors[colorIndex])
+            if let id = dict["id"] as? String,
+               let latitude = dict["latitude"] as? Double,
+               let longitude = dict["longitude"] as? Double,
+               let name = dict["name"] as? String,
+               let icon = dict["icon"] as? String,
+               let colorIndex = dict["color"] as? Int{
+                return SavedLocation(
+                    id: id,
+                    coordinate: CLLocationCoordinate2D(latitude: latitude, longitude: longitude),
+                    name: name,
+                    icon: icon,
+                    color: colors[colorIndex]
+                )
             }
             return nil
         }
+        print("Loading Location is OK")
     }
     
     func deleteLocation(location: SavedLocation) {
         var savedLocations = UserDefaults.standard.array(forKey: key) as? [[String: Any]] ?? []
         if let index = savedLocations.firstIndex(where: { dict in
-            if let latitude = dict["latitude"] as? Double, let longitude = dict["longitude"] as? Double {
-                return latitude == location.coordinate.latitude && longitude == location.coordinate.longitude
+            if let id = dict["id"] as? String {
+                return id == location.id
             }
             return false
         }) {
             savedLocations.remove(at: index)
             UserDefaults.standard.set(savedLocations, forKey: key)
-            loadSavedLocations()
         }
+        loadSavedLocations()
     }
 }
 

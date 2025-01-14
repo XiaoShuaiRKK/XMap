@@ -10,6 +10,7 @@ import MapKit
 
 struct ContentView: View {
     @EnvironmentObject var locationStore: LocationManager
+    let healthManager = HealthManager()
     
     var body: some View {
         TabView {

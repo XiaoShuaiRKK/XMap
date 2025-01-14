@@ -12,7 +12,7 @@ import PhotosUI
 
 struct ImagePicker: UIViewControllerRepresentable {
     @Binding var images: [UIImage]
-    var locationID: UUID
+    var locationID: String
     public static let IMAGE_KEY: String = "_SavedImageFilenames"
     
     class Coordinator: NSObject, PHPickerViewControllerDelegate {
@@ -78,7 +78,7 @@ struct ImagePicker: UIViewControllerRepresentable {
     
     //保存图片文件名到UserDefaults
     func saveImageFilename(_ filename: String){
-        let key = "\(locationID.uuidString)\(ImagePicker.IMAGE_KEY)"
+        let key = "\(locationID)\(ImagePicker.IMAGE_KEY)"
         print(key)
         var imageFilenames = UserDefaults.standard.stringArray(forKey: key) ?? []
         imageFilenames.append(filename)

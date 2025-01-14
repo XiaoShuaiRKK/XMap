@@ -16,6 +16,8 @@ struct MapView: UIViewRepresentable {
         let mapView = MKMapView()
         mapView.delegate = context.coordinator
         mapView.showsUserLocation = true
+        //启动用户位置跟踪
+        mapView.userTrackingMode = .followWithHeading
         //手势识别器
         let panGesture = UIPanGestureRecognizer(target: context.coordinator, action: #selector(context.coordinator.userDidInteract))
         let pinchGesture = UIPinchGestureRecognizer(target: context.coordinator, action: #selector(context.coordinator.userDidInteract))
@@ -33,6 +35,12 @@ struct MapView: UIViewRepresentable {
             let region = MKCoordinateRegion(center: lastLocation.coordinate, latitudinalMeters: 500, longitudinalMeters: 500)
             uiView.setRegion(region, animated: true)
         }
+        
+//        //确保每次用户位置更新时，地图中心始终更新
+//        if let userLoaction = uiView.userLocation.location {
+//            let reigon = MKCoordinateRegion(center: userLoaction.coordinate, latitudinalMeters: 500, longitudinalMeters: 500)
+//            uiView.setRegion(reigon, animated: true)
+//        }
     }
     
     func makeCoordinator() -> Coordinator {
@@ -65,7 +73,7 @@ struct MapView: UIViewRepresentable {
         
         private func resetTime() {
             userInteractionTimer?.invalidate()
-            userInteractionTimer = Timer.scheduledTimer(withTimeInterval: 8.0, repeats: false) { [weak self] _ in
+            userInteractionTimer = Timer.scheduledTimer(withTimeInterval: 6.0, repeats: false) { [weak self] _ in
                 self?.userHasInteracted = false
             }
         }

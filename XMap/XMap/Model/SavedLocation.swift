@@ -10,21 +10,19 @@ import MapKit
 import SwiftUI
 
 struct SavedLocation: Hashable,Identifiable {
-    let id = UUID()
+    let id: String
     let coordinate: CLLocationCoordinate2D
     let name: String
     let icon: String
     let color: Color
     
     static func == (lhs: SavedLocation, rhs: SavedLocation) -> Bool {
-        return lhs.coordinate.latitude == rhs.coordinate.latitude && lhs.coordinate.longitude == rhs.coordinate.longitude && lhs.name == rhs.name && lhs.icon == rhs.icon && lhs.color.description == rhs.color.description
+        return lhs.id == rhs.id
     }
     
     func hash(into hasher: inout Hasher) {
-        hasher.combine(coordinate.latitude)
-        hasher.combine(coordinate.longitude)
-        hasher.combine(name)
-        hasher.combine(icon)
-        hasher.combine(color.description)
+        hasher.combine(id)
     }
 }
+
+let emptySavedLocation = SavedLocation(id: "", coordinate: CLLocationCoordinate2D(), name: "", icon: "", color: .clear)

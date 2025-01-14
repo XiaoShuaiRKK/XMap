@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>此应用需要访问您的健康数据以显示步数和距离</string>
+	<key>NSHealthShareUsageDescription</key>
+	<string>此应用需要访问您的健康数据以显示步数和距离</string>
+	<key>NSExtension</key>
+	<dict>
+		<key>NSExtensionAttributes</key>
+		<dict>
+			<key>widgetFamily</key>
+			<array>
+				<string>systemSmall</string>
+				<string>systemMedium</string>
+				<string>systemLarge</string>
+				<string>accessoryCircular</string>
+			</array>
+		</dict>
+		<key>NSExtensionPointIdentifier</key>
+		<string>com.apple.widgetkit-extension</string>
+	</dict>
+</dict>
+</plist>
